@@ -10,7 +10,8 @@
     "db:setup": "tsx scripts/setup-db.ts",
     "db:seed": "tsx scripts/seed.ts",
     "db:seed-demo": "tsx scripts/seed-demo.ts",
-    "db:reset": "tsx scripts/db-reset.ts"
+    "db:reset": "tsx scripts/db-reset.ts",
+    "storage:clear": "tsx scripts/cos-clear.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

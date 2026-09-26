@@ -7,7 +7,7 @@ export type TicketStatus = "Backlog" | "InProgress" | "InReview" | "Done" | "Nee
 export type Severity = "critical" | "high" | "medium" | "low"
 export type RunStatus = "queued" | "running" | "passed" | "failed" | "error"
 export type TestResultStatus = "passed" | "failed" | "timedOut" | "skipped"
-export type ArtifactType = "screenshot" | "trace" | "diff"
+export type ArtifactType = "screenshot" | "trace" | "video" | "diff"
 export type TriageSource = "watsonx" | "heuristic" | "pending"
 export type Trigger = "bob" | "ci" | "manual"
 export type Actor = "bob" | "user" | "ci"
@@ -129,6 +129,8 @@ export interface Result extends CloudantMeta {
   network: NetworkEntry[]
   domSnippet?: string
   screenshotUrl?: string
+  traceUrl?: string
+  videoUrl?: string
   diffPct?: number
   diffUrl?: string
   createdAt: string
@@ -143,7 +145,7 @@ export interface Triage {
   source: TriageSource
 }
 export interface TicketEvidence {
-  kind: "screenshot" | "trace" | "diff" | "console" | "network"
+  kind: "screenshot" | "trace" | "video" | "diff" | "console" | "network"
   url?: string
   note?: string
 }
@@ -227,6 +229,8 @@ export interface PostResultBody {
   network: NetworkEntry[]
   domSnippet?: string
   screenshotUrl?: string
+  traceUrl?: string
+  videoUrl?: string
   diffPct?: number
   diffUrl?: string
 }

@@ -4,8 +4,8 @@ import { storeMedia } from "@/lib/storage"
 import { unauthorized, badRequest, created } from "@/lib/http"
 import type { ArtifactType } from "@/lib/types"
 
-const ALLOWED_TYPES: ArtifactType[] = ["screenshot", "trace", "diff"]
-const EXT: Record<ArtifactType, string> = { screenshot: "png", trace: "zip", diff: "png" }
+const ALLOWED_TYPES: ArtifactType[] = ["screenshot", "trace", "video", "diff"]
+const EXT: Record<ArtifactType, string> = { screenshot: "png", trace: "zip", video: "webm", diff: "png" }
 
 // POST /api/v1/artifacts  (multipart/form-data)
 // Fields: runId, testId, type ("screenshot"|"trace"|"diff"), file (binary).

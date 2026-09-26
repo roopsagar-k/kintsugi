@@ -51,6 +51,8 @@ export const PostResultSchema = z.object({
     .default([]),
   domSnippet: z.string().optional(),
   screenshotUrl: z.string().optional(),
+  traceUrl: z.string().optional(),
+  videoUrl: z.string().optional(),
   diffPct: z.number().optional(),
   diffUrl: z.string().optional(),
 })

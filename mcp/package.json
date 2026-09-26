@@ -1,0 +1,23 @@
+{
+  "name": "kintsugi-mcp",
+  "version": "0.1.0",
+  "description": "Kintsugi MCP server — turns IBM Bob into an autonomous QA engineer. Scaffolds a Playwright workspace, runs E2E tests in a real browser, triages failures with IBM watsonx.ai, and raises Kanban tickets on the Kintsugi dashboard.",
+  "type": "module",
+  "private": true,
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.reporter.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "dev": "tsc -p tsconfig.json --watch",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
+  }
+}

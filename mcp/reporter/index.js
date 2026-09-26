@@ -1,7 +1,8 @@
 // KintsugiReporter — Playwright custom reporter.
 // Writes NDJSON result lines to KINTSUGI_NDJSON_PATH.
 // The parent MCP process tails that file to track progress.
-// This file is intentionally self-contained with no imports from src/ so it can
+// This file is intentionally self-contained with no imports from src/ (or from
+// @playwright/test, which lives in the *target* project's node_modules) so it can
 // be compiled and referenced as a standalone Playwright reporter path.
 import { appendFileSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
@@ -28,6 +29,8 @@ export default class KintsugiReporter {
         else
             this.counts.failed++;
         const screenshotPath = result.attachments.find((a) => a.name === "screenshot")?.path;
+        const tracePath = result.attachments.find((a) => a.name === "trace")?.path;
+        const videoPath = result.attachments.find((a) => a.name === "video")?.path;
         const consoleErrors = parseJsonAttachment(result, "kintsugi:console") ?? [];
         const failedRequests = parseJsonAttachment(result, "kintsugi:requests") ?? [];
         const domSnippet = parseStringAttachment(result, "kintsugi:dom");
@@ -47,6 +50,8 @@ export default class KintsugiReporter {
             failedRequests,
             domSnippet,
             screenshotPath, // parent reads this path and uploads as artifact
+            tracePath, // parent reads this path and uploads as artifact
+            videoPath, // parent reads this path and uploads as artifact
         });
         this.writeLine(line);
     }

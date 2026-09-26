@@ -1,9 +1,10 @@
-interface Attachment {
+interface PwAttachment {
     name: string;
     path?: string;
     body?: Buffer;
+    contentType: string;
 }
-interface TestCase {
+interface PwTestCase {
     id: string;
     title: string;
     location: {
@@ -11,26 +12,26 @@ interface TestCase {
         line: number;
     };
 }
-interface TestResult {
+interface PwTestResult {
+    status: string;
     retry: number;
-    status: "passed" | "failed" | "timedOut" | "skipped" | "interrupted";
     duration: number;
     error?: {
         message?: string;
         stack?: string;
     };
-    attachments: Attachment[];
+    attachments: PwAttachment[];
 }
-interface FullResult {
+interface PwFullResult {
     status: string;
     duration: number;
 }
 export default class KintsugiReporter {
-    private readonly ndjsonPath;
-    private readonly counts;
+    private ndjsonPath;
+    private counts;
     constructor();
-    onTestEnd(test: TestCase, result: TestResult): void;
-    onEnd(result: FullResult): void;
+    onTestEnd(test: PwTestCase, result: PwTestResult): void;
+    onEnd(result: PwFullResult): void;
     private writeLine;
 }
 export {};

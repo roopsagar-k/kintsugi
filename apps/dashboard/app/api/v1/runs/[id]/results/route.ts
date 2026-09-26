@@ -62,6 +62,8 @@ export async function POST(request: NextRequest, { params }: Ctx) {
     network: parsed.data.network,
     domSnippet: parsed.data.domSnippet,
     screenshotUrl: parsed.data.screenshotUrl,
+    traceUrl: parsed.data.traceUrl,
+    videoUrl: parsed.data.videoUrl,
     diffPct: parsed.data.diffPct,
     diffUrl: parsed.data.diffUrl,
     createdAt: now,
@@ -79,6 +81,12 @@ export async function POST(request: NextRequest, { params }: Ctx) {
     const evidence: TicketEvidence[] = []
     if (parsed.data.screenshotUrl) {
       evidence.push({ kind: "screenshot", url: parsed.data.screenshotUrl })
+    }
+    if (parsed.data.traceUrl) {
+      evidence.push({ kind: "trace", url: parsed.data.traceUrl })
+    }
+    if (parsed.data.videoUrl) {
+      evidence.push({ kind: "video", url: parsed.data.videoUrl })
     }
     if (parsed.data.diffUrl) {
       evidence.push({ kind: "diff", url: parsed.data.diffUrl })

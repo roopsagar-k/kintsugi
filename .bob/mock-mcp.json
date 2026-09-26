@@ -1,0 +1,18 @@
+{
+  "_comment": "TEMPLATE — copy this file to .bob/mcp.json and fill in the values. The real mcp.json is gitignored because it holds a secret API key.",
+  "mcpServers": {
+    "kintsugi": {
+      "command": "node",
+      "args": ["/ABSOLUTE/PATH/TO/kintsugi/mcp/dist/index.js"],
+      "env": {
+        "KINTSUGI_MODE": "local",
+        "KINTSUGI_API_URL": "http://localhost:3000",
+        "KINTSUGI_API_KEY": "kts_live_xxxxxxxxxxxxxxxxxxxxxxxx",
+        "KINTSUGI_WATSONX_API_KEY": "",
+        "KINTSUGI_WATSONX_PROJECT_ID": "",
+        "KINTSUGI_WATSONX_URL": "https://us-south.ml.cloud.ibm.com",
+        "KINTSUGI_WATSONX_MODEL": "ibm/granite-4-h-small"
+      }
+    }
+  }
+}

@@ -24,6 +24,51 @@ import type {
   TriageResult,
   TriagePending,
 } from "./types.js";
+import { logger } from "../lib/logger.js";
+
+const RETRYABLE_STATUSES = new Set([429, 500, 502, 503, 504]);
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+function backoffMs(attempt: number): number {
+  // 0.5s, 1s, 2s … plus a little jitter to avoid thundering-herd retries
+  return 500 * 2 ** (attempt - 1) + Math.floor(Math.random() * 250);
+}
+
+/**
+ * Runs a fetch with retry on rate-limit / transient failures (429, 5xx) and network
+ * errors, using exponential backoff with jitter (honouring Retry-After when present).
+ * The Cloudant Lite plan rate-limits under bursty load, so artifact uploads and result
+ * posts could otherwise be dropped — retrying spaces the requests out.
+ */
+async function fetchWithRetry(
+  doRequest: () => Promise<Response>,
+  label: string,
+  maxAttempts = 4,
+): Promise<Response> {
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const res = await doRequest();
+      if (res.ok || !RETRYABLE_STATUSES.has(res.status) || attempt === maxAttempts) {
+        return res;
+      }
+      const retryAfter = Number(res.headers.get("retry-after"));
+      const waitMs =
+        Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : backoffMs(attempt);
+      logger.warn("request rate-limited, retrying", { label, status: res.status, attempt, waitMs });
+      await sleep(waitMs);
+    } catch (e) {
+      lastErr = e;
+      if (attempt === maxAttempts) throw e;
+      logger.warn("request failed, retrying", { label, attempt, err: String(e).slice(0, 80) });
+      await sleep(backoffMs(attempt));
+    }
+  }
+  throw lastErr ?? new Error(`${label} failed after ${maxAttempts} attempts`);
+}
 
 interface WireTriage {
   severity?: Severity;
@@ -101,11 +146,15 @@ export class ApiClient implements IKintsugiStore {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async fetch(method: string, path: string, body?: unknown): Promise<any> {
-    const res = await fetch(`${this.baseUrl}${path}`, {
-      method,
-      headers: this.headers(),
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
+    const res = await fetchWithRetry(
+      () =>
+        fetch(`${this.baseUrl}${path}`, {
+          method,
+          headers: this.headers(),
+          body: body !== undefined ? JSON.stringify(body) : undefined,
+        }),
+      `${method} ${path}`,
+    );
     if (!res.ok) {
       const text = await res.text().catch(() => "");
       throw new Error(`API ${method} ${path} → ${res.status}: ${text.slice(0, 200)}`);
@@ -280,17 +329,21 @@ export class ApiClient implements IKintsugiStore {
   // ── Artifacts ──────────────────────────────────────────────────────────────
   async uploadArtifact(args: UploadArtifactArgs): Promise<Artifact> {
     const { readFileSync } = await import("node:fs");
-    const form = new FormData();
-    form.append("runId", args.runId);
-    form.append("testId", args.testId);
-    form.append("type", args.type);
     const fileBytes = readFileSync(args.filePath);
-    form.append("file", new Blob([new Uint8Array(fileBytes)]), args.filePath.split("/").pop() ?? "file");
-    const res = await fetch(`${this.baseUrl}/api/v1/artifacts`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${this.apiKey}` },
-      body: form,
-    });
+    const filename = args.filePath.split("/").pop() ?? "file";
+    const res = await fetchWithRetry(() => {
+      // Rebuild the multipart body on each attempt — a FormData body can't be re-sent.
+      const form = new FormData();
+      form.append("runId", args.runId);
+      form.append("testId", args.testId);
+      form.append("type", args.type);
+      form.append("file", new Blob([new Uint8Array(fileBytes)]), filename);
+      return fetch(`${this.baseUrl}/api/v1/artifacts`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${this.apiKey}` },
+        body: form,
+      });
+    }, `POST /api/v1/artifacts (${args.type})`);
     if (!res.ok) {
       const text = await res.text().catch(() => "");
       throw new Error(`API POST /api/v1/artifacts → ${res.status}: ${text.slice(0, 200)}`);

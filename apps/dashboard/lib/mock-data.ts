@@ -18,6 +18,8 @@ export interface UiTicket {
   confidence: number
   source: "watsonx" | "heuristic"
   screenshot?: string
+  video?: string
+  trace?: string
   fixDiff?: string
   evidence: { kind: string; note?: string }[]
   history: { ts: string; actor: "bob" | "user" | "ci"; from?: TicketStatus; to?: TicketStatus; note?: string }[]

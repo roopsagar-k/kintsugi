@@ -6,6 +6,14 @@ import type { ArtifactType } from "@/lib/types"
 
 const ALLOWED_TYPES: ArtifactType[] = ["screenshot", "trace", "video", "diff"]
 const EXT: Record<ArtifactType, string> = { screenshot: "png", trace: "zip", video: "webm", diff: "png" }
+// Serve with a correct MIME so <img>/<video> render inline (the MCP uploads raw
+// blobs with no type, which would otherwise be stored as application/octet-stream).
+const MIME: Record<ArtifactType, string> = {
+  screenshot: "image/png",
+  trace: "application/zip",
+  video: "video/webm",
+  diff: "image/png",
+}
 
 // POST /api/v1/artifacts  (multipart/form-data)
 // Fields: runId, testId, type ("screenshot"|"trace"|"diff"), file (binary).
@@ -30,7 +38,7 @@ export async function POST(request: NextRequest) {
   if (!(file instanceof File)) return badRequest("Missing file.")
 
   const data = Buffer.from(await file.arrayBuffer())
-  const contentType = file.type || "application/octet-stream"
+  const contentType = MIME[type as ArtifactType] ?? file.type ?? "application/octet-stream"
 
   // Object key is deterministic + project-scoped.
   const ext = EXT[type as ArtifactType]

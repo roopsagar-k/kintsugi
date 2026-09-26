@@ -9,6 +9,8 @@ import type { UiTicket, UiRun, UiEvent } from "@/lib/mock-data"
 
 function toUiTicket(t: Ticket): UiTicket {
   const screenshot = t.evidence?.find((e) => e.kind === "screenshot")?.url
+  const video = t.evidence?.find((e) => e.kind === "video")?.url
+  const trace = t.evidence?.find((e) => e.kind === "trace")?.url
   return {
     id: t._id,
     title: t.title,
@@ -23,6 +25,8 @@ function toUiTicket(t: Ticket): UiTicket {
     confidence: t.triage?.confidence ?? 0.5,
     source: (t.triage?.source as "watsonx" | "heuristic") ?? "heuristic",
     screenshot,
+    video,
+    trace,
     fixDiff: t.fixDiff,
     evidence: (t.evidence ?? []).map((e) => ({ kind: e.kind, note: e.note })),
     history: (t.history ?? []).map((h) => ({

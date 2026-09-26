@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Clock, FileCode2, GitPullRequestArrow, Loader2, Maximize2, Sparkles, X } from "lucide-react"
+import { Clock, Download, FileCode2, GitPullRequestArrow, Loader2, Maximize2, Sparkles, X } from "lucide-react"
 import { toast } from "sonner"
 import type { UiTicket } from "@/lib/mock-data"
 import { requestRerun } from "@/lib/actions"
@@ -45,6 +45,12 @@ export function TicketSheet({
     const last = ticket?.history?.[ticket.history.length - 1]
     setQueued(Boolean(last?.note?.toLowerCase().includes("re-run requested")))
   }
+
+  // Screenshot / video / trace are rendered as media below; keep only the
+  // text-note evidence (console, network, diff) for the list.
+  const textEvidence = (ticket?.evidence ?? []).filter(
+    (e) => !["screenshot", "video", "trace"].includes(e.kind),
+  )
 
   async function onRerun(t: UiTicket) {
     setRerunning(true)
@@ -113,14 +119,41 @@ export function TicketSheet({
                     </button>
                   </div>
                 )}
-                <ul className="flex flex-col gap-2">
-                  {ticket.evidence.map((e, i) => (
-                    <li key={i} className="rounded-md border bg-muted/40 p-2 text-xs">
-                      <span className="font-medium capitalize">{e.kind}</span>
-                      {e.note && <span className="text-muted-foreground"> — {e.note}</span>}
-                    </li>
-                  ))}
-                </ul>
+                {ticket.video && (
+                  <div className="mb-3 overflow-hidden rounded-lg border bg-black">
+                    {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                    <video
+                      src={ticket.video}
+                      controls
+                      preload="metadata"
+                      className="max-h-[360px] w-full bg-black"
+                    />
+                  </div>
+                )}
+                {ticket.trace && (
+                  <a
+                    href={ticket.trace}
+                    download
+                    className="mb-3 flex items-center justify-between gap-2 rounded-md border bg-muted/40 px-3 py-2 text-xs transition hover:bg-muted"
+                  >
+                    <span className="flex items-center gap-2 font-medium">
+                      <Download className="size-3.5" /> Download Playwright trace
+                    </span>
+                    <code className="shrink-0 text-[10px] text-muted-foreground">
+                      npx playwright show-trace
+                    </code>
+                  </a>
+                )}
+                {textEvidence.length > 0 && (
+                  <ul className="flex flex-col gap-2">
+                    {textEvidence.map((e, i) => (
+                      <li key={i} className="rounded-md border bg-muted/40 p-2 text-xs">
+                        <span className="font-medium capitalize">{e.kind}</span>
+                        {e.note && <span className="text-muted-foreground"> — {e.note}</span>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </section>
 
               <Separator />
